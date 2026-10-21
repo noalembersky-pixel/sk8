@@ -1,0 +1,18 @@
+{
+ "name": "SK8 \u2014 a tiny skateboarding game",
+ "short_name": "SK8",
+ "start_url": "/",
+ "scope": "/",
+ "display": "fullscreen",
+ "orientation": "landscape",
+ "background_color": "#1d1530",
+ "theme_color": "#1d1530",
+ "icons": [
+  {
+   "src": "/favicon.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  }
+ ]
+}
