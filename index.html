@@ -84,6 +84,7 @@ h1 span { color: var(--pink); }
 .cta:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); }
 .cta:focus-visible, .btn:focus-visible, #btnPause:focus-visible { outline: 3px solid var(--paper); outline-offset: 3px; }
 .sub { font-size: 13px; color: var(--lav); letter-spacing: 0.04em; }
+.fb { margin-top: 6px; font-size: 12px; letter-spacing: 0.08em; } .fb a { color: var(--mint); text-decoration: none; border-bottom: 1px solid currentColor; }
 #over .card { align-items: center; text-align: center; background: rgba(30,26,38,0.85); border: 3px solid var(--ink); border-radius: 22px; padding: 18px 26px; box-shadow: 0 8px 0 rgba(0,0,0,0.4); }
 #over h1 { color: var(--pink); font-size: clamp(44px, 12vh, 80px); }
 .big { font: 900 44px/1 var(--ui); color: var(--paper); font-variant-numeric: tabular-nums; }
@@ -160,6 +161,7 @@ h1 span { color: var(--pink); }
       </div>
       <div class="row"><button class="cta" id="btnStart">START</button><button class="cta ghost snd" id="btnSound" type="button">SOUND ON</button></div>
       <div class="sub" id="tBest"></div>
+      <div class="fb"><a id="fbLink" href="https://docs.google.com/forms/d/e/1FAIpQLSfLx1Te-0b2hUVT_iMpqEKojmA8gEFFzZ0--O1AMCpCVGQS_w/viewform" target="_blank" rel="noopener">FEEDBACK</a></div>
     </div>
   </section>
 
@@ -1535,6 +1537,7 @@ document.addEventListener('visibilitychange', () => {      // phone locked or ap
 });
 $('btnQuit').addEventListener('click', () => { paused = false; mode = 'title'; newGame(); show('title'); setMusic(false, true); });
 const sndBtns = [$('btnSound'), $('btnSound2')];
+document.getElementById('fbLink').addEventListener('click', () => track('feedback_click', {}));
 const paintSnd = () => sndBtns.forEach(b => { b.textContent = muted ? 'SOUND OFF' : 'SOUND ON'; b.setAttribute('aria-pressed', String(!muted)); });
 sndBtns.forEach(b => b.addEventListener('click', () => { initAudio(); setMuted(!muted); paintSnd(); })); paintSnd();
 $('rotate').addEventListener('click', () => { splash = false; layout(); initAudio(); });
