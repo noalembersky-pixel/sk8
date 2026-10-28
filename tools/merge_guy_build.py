@@ -16,6 +16,7 @@ What it adds on top of Guy's game:
   - SHARE on win and game-over cards, MENU on the game-over card
   - the cutscene video moved to its own file (cut.mp4), loaded only near level 3
   - debug hook window.__sk8 removed
+  - level 2 (Downtown): unlimited tries instead of "5 tries, then back to level 1"
 """
 import base64, re, sys, pathlib
 
@@ -136,6 +137,21 @@ sub("  $('oScore').textContent = D4.holes + ' / ' + V4.TARGET; $('oBest').textCo
     "  $('oScore').textContent = D4.holes + ' / ' + V4.TARGET; $('oBest').textContent = 'MANHOLES';\n  track('game_over', { level: 2, score, seconds: Math.round(tPlay), manholes: D4.holes, stair_sets: D4.sets, tries_used: l2Fails, best_trick: stats.best || '' });")
 sub("function playCut() {", "function playCut() {\n  track('cutscene_start', {});")
 sub("$('btnSkip').onclick = done;", "$('btnSkip').onclick = () => { track('cutscene_skip', { at_s: Math.round(v.currentTime || 0) }); done(); };")
+
+# ---------- 8b. level 2: unlimited tries (Noa, 28 Oct) ----------
+# Guy's rule sent you back to level 1 after 5 failed tries, but with the level select
+# level 2 stays unlocked, so the penalty looked like a bug. Only showFail4 (Downtown) changes.
+a = s.find('function showFail4() {'); z = s.find('\n}\n', a)
+if a < 0 or z < 0:
+    sys.exit('STOP: showFail4 not found')
+body = s[a:z]
+for old, new in [("const out = l2Fails >= 5;", "const out = false;   // web build: unlimited tries"),
+                 ("$('oTitle').textContent = out ? 'OUT OF TRIES' : \"TIME'S UP · \" + (5 - l2Fails) + (5 - l2Fails === 1 ? ' TRY LEFT' : ' TRIES LEFT');",
+                  "$('oTitle').textContent = \"TIME'S UP\";")]:
+    if body.count(old) != 1:
+        sys.exit(f'STOP: level 2 tries rule changed in showFail4: {old[:60]!r}')
+    body = body.replace(old, new)
+s = s[:a] + body + s[z:]
 
 # ---------- 9. level select, share, menu, credits wiring; remove debug hook ----------
 m = re.search(r"window\.__sk8 = \{.*?\};\n", s)

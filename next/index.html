@@ -2999,11 +2999,11 @@ function showWin4() {
 }
 function showFail4() {
   mode = 'over'; l2Fails++;
-  const out = l2Fails >= 5;
+  const out = false;   // web build: unlimited tries
   $('btnAgain').textContent = out ? 'BACK TO LEVEL 1' : 'TRY AGAIN';
   $('btnAgain').dataset.lvl = out ? '1' : '4';
   $('oHead').textContent = out ? 'BACK TO THE STREET' : 'SO CLOSE!';
-  $('oTitle').textContent = out ? 'OUT OF TRIES' : "TIME'S UP · " + (5 - l2Fails) + (5 - l2Fails === 1 ? ' TRY LEFT' : ' TRIES LEFT');
+  $('oTitle').textContent = "TIME'S UP";
   $('oScore').textContent = D4.holes + ' / ' + V4.TARGET; $('oBest').textContent = 'MANHOLES';
   track('game_over', { level: 2, score, seconds: Math.round(tPlay), manholes: D4.holes, stair_sets: D4.sets, tries_used: l2Fails, best_trick: stats.best || '' });
   setStat('oDist', 'POINTS', score.toLocaleString('en-US')); setStat('oKids', 'STAIR SETS', D4.sets);
