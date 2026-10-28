@@ -33,7 +33,7 @@ def sub(old, new, count=1):
     s = s.replace(old, new)
 
 
-FEEDBACK = 'https://docs.google.com/forms/d/e/1FAIpQLSfLx1Te-0b2hUVT_iMpqEKojmA8gEFFzZ0--O1AMCpCVGQS_w/viewform'
+FEEDBACK = 'https://docs.google.com/forms/d/1rqOcjfHyTOeX9mM_i9ZZ_TgRlVdkYwGYjRxxUn7pfC8/viewform'
 PH_KEY = 'phc_qo4wiAUHZxUNwLi2nGGmHVEUX4cZxUcMNEMy5vxG6jBW'
 
 # ---------- 1. cutscene video -> its own file ----------
