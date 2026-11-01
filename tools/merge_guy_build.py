@@ -16,7 +16,10 @@ What it adds on top of Guy's game:
   - SHARE on win and game-over cards, MENU on the game-over card
   - the cutscene video moved to its own file (cut.mp4), loaded only near level 3
   - debug hook window.__sk8 removed
-  - level 2 (Downtown): unlimited tries instead of "5 tries, then back to level 1"
+  - level 2 (Downtown): Guy's "5 tries, then back to level 1" rule kept, plus: tries are
+    remembered on the device, the title screen shows tries left, and after running out
+    level 2 shows "BEAT STREET AGAIN" and can't be entered until level 1 is beaten again
+    (decided by Noa 1 Nov; without this the rule looked like a bug next to the level select)
 """
 import base64, re, sys, pathlib
 
@@ -138,20 +141,27 @@ sub("  $('oScore').textContent = D4.holes + ' / ' + V4.TARGET; $('oBest').textCo
 sub("function playCut() {", "function playCut() {\n  track('cutscene_start', {});")
 sub("$('btnSkip').onclick = done;", "$('btnSkip').onclick = () => { track('cutscene_skip', { at_s: Math.round(v.currentTime || 0) }); done(); };")
 
-# ---------- 8b. level 2: unlimited tries (Noa, 28 Oct) ----------
-# Guy's rule sent you back to level 1 after 5 failed tries, but with the level select
-# level 2 stays unlocked, so the penalty looked like a bug. Only showFail4 (Downtown) changes.
+# ---------- 8b. level 2 tries: remembered on the device, lock-out until level 1 is beaten again ----------
+# Guy's showFail4 (Downtown) already does "5 tries, then BACK TO LEVEL 1". The web build adds
+# a stored counter and a lock flag so the level select can't be used to dodge the rule.
 a = s.find('function showFail4() {'); z = s.find('\n}\n', a)
 if a < 0 or z < 0:
     sys.exit('STOP: showFail4 not found')
 body = s[a:z]
-for old, new in [("const out = l2Fails >= 5;", "const out = false;   // web build: unlimited tries"),
-                 ("$('oTitle').textContent = out ? 'OUT OF TRIES' : \"TIME'S UP · \" + (5 - l2Fails) + (5 - l2Fails === 1 ? ' TRY LEFT' : ' TRIES LEFT');",
-                  "$('oTitle').textContent = \"TIME'S UP\";")]:
-    if body.count(old) != 1:
-        sys.exit(f'STOP: level 2 tries rule changed in showFail4: {old[:60]!r}')
-    body = body.replace(old, new)
+old = "const out = l2Fails >= 5;"
+if body.count(old) != 1:
+    sys.exit('STOP: level 2 tries rule changed in showFail4')
+body = body.replace(old, old + "\n  l2Store('sk8-l2fails', out ? null : l2Fails); if (out) l2Store('sk8-l2lock', '1');   // web build: tries persist; out of tries locks level 2 until level 1 is beaten again")
 s = s[:a] + body + s[z:]
+sub("let l2Fails = 0;\n", """let l2Fails = 0;
+// web build: level 2 tries are remembered on the device; running out locks level 2 until level 1 is beaten again
+const l2Store = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, String(v)); } catch (e) {} };
+const l2Locked = () => { try { return localStorage.getItem('sk8-l2lock') === '1'; } catch (e) { return false; } };
+function l2Reset() { l2Fails = 0; l2Store('sk8-l2fails', null); l2Store('sk8-l2lock', null); }
+try { l2Fails = Math.min(4, +localStorage.getItem('sk8-l2fails') || 0); } catch (e) {}
+""")
+sub("  l2Fails = 0; mode = 'win'; quietLoops(); winMusic && winMusic();", "  l2Reset(); mode = 'win'; quietLoops(); winMusic && winMusic();")   # level 2 cleared
+sub("  try { localStorage.setItem('sk8-l2', '1'); } catch (e) {}", "  try { localStorage.setItem('sk8-l2', '1'); } catch (e) {}\n  if (!L3) l2Reset();   // beating level 1 gives level 2 back, with fresh tries")
 
 # ---------- 9. level select, share, menu, credits wiring; remove debug hook ----------
 m = re.search(r"window\.__sk8 = \{.*?\};\n", s)
@@ -167,19 +177,20 @@ function paintLevels() {
   const b1 = getBest(), b2 = bestOf('sk8-best-l2b'), b3 = getBest3();
   $('lb1').textContent = b1 ? 'BEST ' + b1.toLocaleString('en-US') : 'START HERE';
   [[2, 'btnL2', 'lb2', b2], [3, 'btnL3', 'lb3', b3]].forEach(([n, id, lb, b]) => {
-    const open = unlocked(n); $(id).classList.toggle('locked', !open);
-    $(lb).textContent = !open ? '🔒 LOCKED' : b ? 'BEST ' + b.toLocaleString('en-US') : 'UNLOCKED';
+    const earned = unlocked(n), open = earned && !(n === 2 && l2Locked()), left = 5 - l2Fails; $(id).classList.toggle('locked', !open);
+    $(lb).textContent = !earned ? '🔒 LOCKED' : !open ? '🔒 BEAT STREET AGAIN' : (n === 2 && l2Fails > 0) ? left + (left === 1 ? ' TRY LEFT' : ' TRIES LEFT') : b ? 'BEST ' + b.toLocaleString('en-US') : 'UNLOCKED';
   });
   $('tBest').textContent = '';
 }
 function lockedTap(n) {
-  $('tBest').textContent = 'FINISH LEVEL ' + (n - 1) + ' TO UNLOCK LEVEL ' + n;
-  track('locked_level_tap', { level: n });
+  const out = n === 2 && unlocked(2) && l2Locked();
+  $('tBest').textContent = out ? 'OUT OF TRIES — FINISH LEVEL 1 AGAIN TO RIDE DOWNTOWN' : 'FINISH LEVEL ' + (n - 1) + ' TO UNLOCK LEVEL ' + n;
+  track('locked_level_tap', { level: n, reason: out ? 'out_of_tries' : 'not_earned' });
 }
-$('btnL2').addEventListener('click', () => { if (!unlocked(2)) return lockedTap(2); initAudio(); newGame(4); mode = 'win'; show('how4'); });
+$('btnL2').addEventListener('click', () => { if (!unlocked(2) || l2Locked()) return lockedTap(2); initAudio(); newGame(4); mode = 'win'; show('how4'); });
 $('btnL3').addEventListener('click', () => { if (!unlocked(3)) return lockedTap(3); initAudio(); newGame(3); mode = 'win'; setTimeout(prepCut, 50); show('how3'); });
 const _show = show; show = id => { _show(id); if (id === 'title') paintLevels(); };
-$('btnMenuOver').addEventListener('click', () => { delete $('btnAgain').dataset.lvl; $('btnAgain').textContent = 'RIDE AGAIN'; l2Fails = 0; level = 1; newGame(); mode = 'title'; quietLoops(); setMusic(false, true); show('title'); });
+$('btnMenuOver').addEventListener('click', () => { delete $('btnAgain').dataset.lvl; $('btnAgain').textContent = 'RIDE AGAIN'; level = 1; newGame(); mode = 'title'; quietLoops(); setMusic(false, true); show('title'); });
 $('btnCredits').addEventListener('click', () => { show('credits'); track('credits_open', {}); });
 $('btnCreditsBack').addEventListener('click', () => show('title'));
 $('fbLink').addEventListener('click', () => track('feedback_click', {}));
