@@ -2984,7 +2984,7 @@ function showWin2() {
   show('win');
 }
 function showWin4() {
-  l2Fails = 0; mode = 'win'; quietLoops(); winMusic && winMusic();
+  l2Reset(); mode = 'win'; quietLoops(); winMusic && winMusic();
   const key = 'sk8-best-l2b', prev = (() => { try { return +localStorage.getItem(key) || 0; } catch (e) { return 0; } })(), best = Math.max(prev, score);
   try { localStorage.setItem(key, String(best)); localStorage.setItem('sk8-l3', '1'); } catch (e) {}
   $('wTitle').innerHTML = 'LEVEL 2<br>CLEARED!';
@@ -2999,11 +2999,12 @@ function showWin4() {
 }
 function showFail4() {
   mode = 'over'; l2Fails++;
-  const out = false;   // web build: unlimited tries
+  const out = l2Fails >= 5;
+  l2Store('sk8-l2fails', out ? null : l2Fails); if (out) l2Store('sk8-l2lock', '1');   // web build: tries persist; out of tries locks level 2 until level 1 is beaten again
   $('btnAgain').textContent = out ? 'BACK TO LEVEL 1' : 'TRY AGAIN';
   $('btnAgain').dataset.lvl = out ? '1' : '4';
   $('oHead').textContent = out ? 'BACK TO THE STREET' : 'SO CLOSE!';
-  $('oTitle').textContent = "TIME'S UP";
+  $('oTitle').textContent = out ? 'OUT OF TRIES' : "TIME'S UP · " + (5 - l2Fails) + (5 - l2Fails === 1 ? ' TRY LEFT' : ' TRIES LEFT');
   $('oScore').textContent = D4.holes + ' / ' + V4.TARGET; $('oBest').textContent = 'MANHOLES';
   track('game_over', { level: 2, score, seconds: Math.round(tPlay), manholes: D4.holes, stair_sets: D4.sets, tries_used: l2Fails, best_trick: stats.best || '' });
   setStat('oDist', 'POINTS', score.toLocaleString('en-US')); setStat('oKids', 'STAIR SETS', D4.sets);
@@ -3011,6 +3012,11 @@ function showFail4() {
   show('over');
 }
 let l2Fails = 0;
+// web build: level 2 tries are remembered on the device; running out locks level 2 until level 1 is beaten again
+const l2Store = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, String(v)); } catch (e) {} };
+const l2Locked = () => { try { return localStorage.getItem('sk8-l2lock') === '1'; } catch (e) { return false; } };
+function l2Reset() { l2Fails = 0; l2Store('sk8-l2fails', null); l2Store('sk8-l2lock', null); }
+try { l2Fails = Math.min(4, +localStorage.getItem('sk8-l2fails') || 0); } catch (e) {}
 function showFail2() {
   mode = 'over';
   l2Fails++;
@@ -3093,6 +3099,7 @@ function showWin() {
   [['wTime', 'TIME'], ['wStomps', 'STOMPS'], ['wHurdles', 'HURDLES'], ['wTrick', 'BEST TRICK']].forEach(([i, l]) => { $(i).previousElementSibling.textContent = l; });
   $('btnNext').textContent = 'LEVEL 2 ▶'; $('btnNext').disabled = false; $('btnNext').className = 'cta'; nextScreen = 'how4';   // level 2 is now Downtown (the vert level is archived)
   try { localStorage.setItem('sk8-l2', '1'); } catch (e) {}
+  if (!L3) l2Reset();   // beating level 1 gives level 2 back, with fresh tries
   track('level_win', { level: L3 ? 3 : 1, score, seconds: sec, stomps: stats.kids, best_trick: stats.best || '' });
   if (L3) { $('wTitle').innerHTML = 'HELL<br>ESCAPED!'; $('btnNext').textContent = 'MENU'; $('btnNext').className = 'cta ghost'; nextScreen = 'title'; $('wStomps').previousElementSibling.textContent = 'KABOOMS'; $('wHurdles').previousElementSibling.textContent = 'DODGES'; }
   show('win');
@@ -3182,19 +3189,20 @@ function paintLevels() {
   const b1 = getBest(), b2 = bestOf('sk8-best-l2b'), b3 = getBest3();
   $('lb1').textContent = b1 ? 'BEST ' + b1.toLocaleString('en-US') : 'START HERE';
   [[2, 'btnL2', 'lb2', b2], [3, 'btnL3', 'lb3', b3]].forEach(([n, id, lb, b]) => {
-    const open = unlocked(n); $(id).classList.toggle('locked', !open);
-    $(lb).textContent = !open ? '🔒 LOCKED' : b ? 'BEST ' + b.toLocaleString('en-US') : 'UNLOCKED';
+    const earned = unlocked(n), open = earned && !(n === 2 && l2Locked()), left = 5 - l2Fails; $(id).classList.toggle('locked', !open);
+    $(lb).textContent = !earned ? '🔒 LOCKED' : !open ? '🔒 BEAT STREET AGAIN' : (n === 2 && l2Fails > 0) ? left + (left === 1 ? ' TRY LEFT' : ' TRIES LEFT') : b ? 'BEST ' + b.toLocaleString('en-US') : 'UNLOCKED';
   });
   $('tBest').textContent = '';
 }
 function lockedTap(n) {
-  $('tBest').textContent = 'FINISH LEVEL ' + (n - 1) + ' TO UNLOCK LEVEL ' + n;
-  track('locked_level_tap', { level: n });
+  const out = n === 2 && unlocked(2) && l2Locked();
+  $('tBest').textContent = out ? 'OUT OF TRIES — FINISH LEVEL 1 AGAIN TO RIDE DOWNTOWN' : 'FINISH LEVEL ' + (n - 1) + ' TO UNLOCK LEVEL ' + n;
+  track('locked_level_tap', { level: n, reason: out ? 'out_of_tries' : 'not_earned' });
 }
-$('btnL2').addEventListener('click', () => { if (!unlocked(2)) return lockedTap(2); initAudio(); newGame(4); mode = 'win'; show('how4'); });
+$('btnL2').addEventListener('click', () => { if (!unlocked(2) || l2Locked()) return lockedTap(2); initAudio(); newGame(4); mode = 'win'; show('how4'); });
 $('btnL3').addEventListener('click', () => { if (!unlocked(3)) return lockedTap(3); initAudio(); newGame(3); mode = 'win'; setTimeout(prepCut, 50); show('how3'); });
 const _show = show; show = id => { _show(id); if (id === 'title') paintLevels(); };
-$('btnMenuOver').addEventListener('click', () => { delete $('btnAgain').dataset.lvl; $('btnAgain').textContent = 'RIDE AGAIN'; l2Fails = 0; level = 1; newGame(); mode = 'title'; quietLoops(); setMusic(false, true); show('title'); });
+$('btnMenuOver').addEventListener('click', () => { delete $('btnAgain').dataset.lvl; $('btnAgain').textContent = 'RIDE AGAIN'; level = 1; newGame(); mode = 'title'; quietLoops(); setMusic(false, true); show('title'); });
 $('btnCredits').addEventListener('click', () => { show('credits'); track('credits_open', {}); });
 $('btnCreditsBack').addEventListener('click', () => show('title'));
 $('fbLink').addEventListener('click', () => track('feedback_click', {}));
