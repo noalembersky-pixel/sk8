@@ -294,7 +294,7 @@ h1 span { color: var(--pink); }
         <b>ENEMIES</b><span>Jump on their heads or over them.</span>
         <b>GOAL</b><span>Reach the 🤟 hand.</span>
       </div>
-      <div class="row lvls"><button class="cta" id="btnStart" type="button">1 STREET<small id="lb1">START HERE</small></button><button class="cta" id="btnL2" type="button">2 DOWNTOWN<small id="lb2"></small></button><button class="cta" id="btnL3" type="button">3 HELL<small id="lb3"></small></button></div><button class="cta" id="btnLevel2" type="button" hidden>LEVEL 2</button><button class="cta ghost snd" id="btnSound" type="button">SOUND ON</button><div class="links"><a id="fbLink" href="https://docs.google.com/forms/d/1rqOcjfHyTOeX9mM_i9ZZ_TgRlVdkYwGYjRxxUn7pfC8/viewform" target="_blank" rel="noopener">FEEDBACK</a><button id="btnCredits" type="button">CREDITS</button></div>
+      <div class="row lvls"><button class="cta" id="btnStart" type="button">1 STREET<small id="lb1">START HERE</small></button><button class="cta" id="btnL2" type="button">2 DOWNTOWN<small id="lb2"></small></button><button class="cta" id="btnL3" type="button">3 HELL<small id="lb3"></small></button></div><button class="cta" id="btnLevel2" type="button" hidden>LEVEL 2</button><button class="cta ghost snd" id="btnSound" type="button">SOUND ON</button><div class="links"><a id="fbLink" href="https://docs.google.com/forms/d/1rqOcjfHyTOeX9mM_i9ZZ_TgRlVdkYwGYjRxxUn7pfC8/viewform" target="_blank" rel="noopener">FEEDBACK</a><button id="btnShareTitle" type="button">SHARE</button><button id="btnCredits" type="button">CREDITS</button></div>
       <div class="sub" id="tBest"></div>
     </div>
   </section>
@@ -391,7 +391,7 @@ h1 span { color: var(--pink); }
   <section class="ov" id="pause" hidden>
     <div class="card">
       <h1>Pause</h1>
-      <div class="row"><button class="cta" id="btnResume">RESUME</button><button class="cta ghost snd" id="btnSound2" type="button">SOUND ON</button><button class="cta ghost" id="btnQuit">MENU</button></div>
+      <div class="row"><button class="cta" id="btnResume">RESUME</button><button class="cta ghost" id="btnSharePause" type="button">SHARE</button><button class="cta ghost snd" id="btnSound2" type="button">SOUND ON</button><button class="cta ghost" id="btnQuit">MENU</button></div>
     </div>
   </section>
 </div>
@@ -457,8 +457,10 @@ function layout() {
   cv.width = Math.round(appW * dpr); cv.height = Math.round(appH * dpr);
   cv.style.width = appW + 'px'; cv.style.height = appH + 'px';
   scale = appH / VH; VW = appW / scale;
-  if (!portrait) splash = false;
-  document.getElementById('rotate').hidden = !(portrait && splash);
+  if (!portrait && !window.SK8Native) splash = false;     // web: no splash once sideways. Android app: always show the start card once (tap to ride starts the sound)
+  const rt = document.getElementById('rotate');
+  rt.querySelector('.cap b').textContent = portrait ? 'TURN YOUR PHONE' : 'SK8: HELL YEAH';
+  rt.hidden = !splash;
 }
 window.addEventListener('resize', layout);
 window.addEventListener('orientationchange', () => setTimeout(layout, 120));
@@ -3207,20 +3209,26 @@ $('btnCredits').addEventListener('click', () => { show('credits'); track('credit
 $('btnCreditsBack').addEventListener('click', () => show('title'));
 $('fbLink').addEventListener('click', () => track('feedback_click', {}));
 async function shareScore(where) {
-  const won = where === 'win', n = pubLevel(level), pts = score.toLocaleString('en-US');
-  const text = won ? (n === 3 ? `I escaped hell in SK8 with ${pts} points. Beat me:` : `I shredded Level ${n} of SK8 with ${pts} points. Beat me:`)
-                   : `I got ${pts} points on Level ${n} of SK8. Beat me:`;
   const url = 'https://sk8.oatmealmorning.com/';
-  const btn = $(won ? 'btnShareWin' : 'btnShareOver');
+  const n = pubLevel(level), pts = score.toLocaleString('en-US');
+  let text;
+  if (where === 'win') text = n === 3 ? `I escaped hell in SK8: Hell Yeah with ${pts} points. Beat me:` : `I shredded Level ${n} of SK8: Hell Yeah with ${pts} points. Beat me:`;
+  else if (where === 'over') text = `I got ${pts} points on Level ${n} of SK8: Hell Yeah. Beat me:`;
+  else if (where === 'pause') text = `I'm riding Level ${n} of SK8: Hell Yeah. Come beat me:`;
+  else text = 'SK8: Hell Yeah is a tiny skateboarding game. Kick, flip, grind:';
+  const btn = $({ win: 'btnShareWin', over: 'btnShareOver', pause: 'btnSharePause', title: 'btnShareTitle' }[where]);
   track('share_click', { where, level: n, score });
   try {
-    if (navigator.share) { await navigator.share({ title: 'SK8', text, url }); return; }
+    if (window.SK8Native && SK8Native.share) { SK8Native.share(text + ' ' + url); return; }   // Android app: opens the system share sheet directly
+    if (navigator.share) { await navigator.share({ title: 'SK8: Hell Yeah', text, url }); return; }
     await navigator.clipboard.writeText(text + ' ' + url);
     const old = btn.textContent; btn.textContent = 'LINK COPIED'; setTimeout(() => { btn.textContent = old; }, 1600);
   } catch (e) {}
 }
 $('btnShareWin').addEventListener('click', () => shareScore('win'));
 $('btnShareOver').addEventListener('click', () => shareScore('over'));
+$('btnSharePause').addEventListener('click', () => shareScore('pause'));
+$('btnShareTitle').addEventListener('click', () => shareScore('title'));
 paintLevels();
 
 Promise.all([ready, document.fonts ? document.fonts.load('400 40px "Rubik Wet Paint"').catch(() => {}) : 0]).then(() => {
