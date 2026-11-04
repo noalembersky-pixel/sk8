@@ -243,8 +243,9 @@ h1 span { color: var(--pink); }
   padding: 24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); }
 .sk { position: relative; width: min(46vw, 190px); height: min(72vh, 560px); animation: turn 2.6s cubic-bezier(.6,-0.3,.3,1.3) infinite; }
 /* phone already sideways (Android start card): same board proportions, laid flat and sized by width, so it isn't squashed */
-#rotate.land .sk { position: absolute; left: 50%; top: 42%; height: min(46vw, 110vh, 420px); width: auto; aspect-ratio: 19 / 56; transform: translate(-50%, -50%) rotate(-90deg); animation: flat 2.6s ease-in-out infinite; }
-@keyframes flat { 0%, 100% { transform: translate(-50%, -50%) rotate(-90deg); } 50% { transform: translate(-50%, calc(-50% - 6px)) rotate(-90deg); } }
+#rotate.land .sk { position: absolute; left: 50%; top: 42%; height: min(46vw, 110vh, 420px); width: auto; aspect-ratio: 19 / 56; transform: translate(-50%, -50%) rotate(-90deg); animation: turnflat 2.6s cubic-bezier(.6,-0.3,.3,1.3) infinite; }
+/* the board stands up small, then turns sideways and grows: the same "turn your phone" motion as the upright card */
+@keyframes turnflat { 0%, 18% { transform: translate(-50%, -50%) rotate(0deg) scale(0.62); } 46%, 72% { transform: translate(-50%, -50%) rotate(-90deg) scale(1); } 100% { transform: translate(-50%, -50%) rotate(0deg) scale(0.62); } }
 #rotate.land .sk .logo { font-size: clamp(40px, 7vw, 84px); }
 @keyframes turn { 0%, 18% { transform: rotate(0deg) scale(1); } 46%, 72% { transform: rotate(-90deg) scale(0.66); } 100% { transform: rotate(0deg) scale(1); } }
 .sk .deck2 { position: absolute; inset: 0; border-radius: 95px / 80px; border: 6px solid var(--ink); overflow: hidden;
