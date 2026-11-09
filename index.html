@@ -424,7 +424,7 @@ if (PH_KEY) {
   let sk8Pid = null;   // app builds only: a random ID kept on the phone, so a returning player counts as the same player. The web game keeps no ID.
   if (SK8_BUILD.platform !== 'web') { try { sk8Pid = localStorage.getItem('sk8-pid'); if (!sk8Pid) { sk8Pid = 'sk8-' + Array.from(crypto.getRandomValues(new Uint8Array(16)), x => ('0' + x.toString(16)).slice(-2)).join(''); localStorage.setItem('sk8-pid', sk8Pid); } } catch (e) { sk8Pid = null; } }
   posthog.init(PH_KEY, Object.assign({ api_host: 'https://us.i.posthog.com', persistence: 'memory', capture_pageview: true, autocapture: false, disable_session_recording: true }, sk8Pid ? { bootstrap: { distinctID: sk8Pid } } : {})); posthog.register(Object.assign({ app: 'sk8', build: '3-levels', platform: SK8_BUILD.platform }, SK8_BUILD.version ? { app_version: SK8_BUILD.version } : {}));try{if(location.search.indexOf('tester=1')>-1)localStorage.setItem('om-tester','1');if(localStorage.getItem('om-tester')==='1')posthog.register({is_internal:true})}catch(e){};
-  window.track = (ev, props) => { try { posthog.capture(ev, props); } catch (e) {} };
+  window.track = (ev, props, opts) => { try { posthog.capture(ev, props, opts); } catch (e) {} };
 }
 </script>
 <script>
@@ -3082,7 +3082,15 @@ function fitCards() {
 }
 window.addEventListener('resize', () => setTimeout(fitCards, 60));
 const pubLevel = l => l === 4 ? 2 : l === 3 ? 3 : l === 2 ? 'vert' : 1;
+let quitSent = false;   // one game_quit per run at most
+function trackQuit(reason) {   // player left a run before winning or losing: quit button, or app put away / phone locked mid-run
+  if (mode !== 'play' || quitSent) return; quitSent = true;
+  const p = { level: pubLevel(level), reason, seconds: Math.round(tPlay), score, lives };
+  try { if (level === 4 && D4) { p.manholes = D4.holes; p.stair_sets = D4.sets; } else if (level !== 2) p.distance_m = Math.floor(dist()); } catch (e) {}
+  track('game_quit', p, { send_instantly: true, transport: 'sendBeacon' });
+}
 function startGame(lvl) {
+  quitSent = false;
   if (WIN.src) { try { WIN.src.stop(); } catch (e) {} WIN.src = null; }
   initAudio();
   try { if (document.documentElement.requestFullscreen && 'ontouchstart' in window && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
@@ -3188,10 +3196,10 @@ $('wHero').src = ASSET_SRC.win;
 $('btnPause').addEventListener('click', togglePause);
 $('btnResume').addEventListener('click', togglePause);
 document.addEventListener('visibilitychange', () => {      // phone locked or app switched: pause and go quiet
-  if (document.hidden) { if (mode === 'play' && !paused) togglePause(); if (AC && AC.state === 'running') AC.suspend(); }
+  if (document.hidden) { trackQuit('app_hidden'); if (mode === 'play' && !paused) togglePause(); if (AC && AC.state === 'running') AC.suspend(); }
   else if (AC && AC.state === 'suspended') AC.resume();
 });
-$('btnQuit').addEventListener('click', () => { paused = false; mode = 'title'; newGame(); quietLoops(); show('title'); setMusic(false, true); });
+$('btnQuit').addEventListener('click', () => { trackQuit('quit_button'); paused = false; mode = 'title'; newGame(); quietLoops(); show('title'); setMusic(false, true); });
 const sndBtns = [$('btnSound'), $('btnSound2')];
 const paintSnd = () => sndBtns.forEach(b => { b.textContent = muted ? 'SOUND ON' : 'SOUND OFF'; b.setAttribute('aria-label', muted ? 'Turn sound on' : 'Turn sound off'); });
 sndBtns.forEach(b => b.addEventListener('click', () => { initAudio(); setMuted(!muted); paintSnd(); })); paintSnd();

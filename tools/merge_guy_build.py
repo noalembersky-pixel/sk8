@@ -121,7 +121,7 @@ if (PH_KEY) {
   let sk8Pid = null;   // app builds only: a random ID kept on the phone, so a returning player counts as the same player. The web game keeps no ID.
   if (SK8_BUILD.platform !== 'web') { try { sk8Pid = localStorage.getItem('sk8-pid'); if (!sk8Pid) { sk8Pid = 'sk8-' + Array.from(crypto.getRandomValues(new Uint8Array(16)), x => ('0' + x.toString(16)).slice(-2)).join(''); localStorage.setItem('sk8-pid', sk8Pid); } } catch (e) { sk8Pid = null; } }
   posthog.init(PH_KEY, Object.assign({ api_host: 'https://us.i.posthog.com', persistence: 'memory', capture_pageview: true, autocapture: false, disable_session_recording: true }, sk8Pid ? { bootstrap: { distinctID: sk8Pid } } : {})); posthog.register(Object.assign({ app: 'sk8', build: '3-levels', platform: SK8_BUILD.platform }, SK8_BUILD.version ? { app_version: SK8_BUILD.version } : {}));try{if(location.search.indexOf('tester=1')>-1)localStorage.setItem('om-tester','1');if(localStorage.getItem('om-tester')==='1')posthog.register({is_internal:true})}catch(e){};
-  window.track = (ev, props) => { try { posthog.capture(ev, props); } catch (e) {} };
+  window.track = (ev, props, opts) => { try { posthog.capture(ev, props, opts); } catch (e) {} };
 }
 </script>
 <script>
@@ -129,6 +129,19 @@ const ASSET_SRC=''' % PH_KEY)
 
 # internal level numbers: 1 street, 4 downtown (shown as level 2), 3 hell, 2 = archived vert level
 sub("function startGame(lvl) {", "const pubLevel = l => l === 4 ? 2 : l === 3 ? 3 : l === 2 ? 'vert' : 1;\nfunction startGame(lvl) {")
+# game_quit: a run left before winning or losing (quit button, or app put away mid-run)
+sub("function startGame(lvl) {\n", """let quitSent = false;   // one game_quit per run at most
+function trackQuit(reason) {   // player left a run before winning or losing: quit button, or app put away / phone locked mid-run
+  if (mode !== 'play' || quitSent) return; quitSent = true;
+  const p = { level: pubLevel(level), reason, seconds: Math.round(tPlay), score, lives };
+  try { if (level === 4 && D4) { p.manholes = D4.holes; p.stair_sets = D4.sets; } else if (level !== 2) p.distance_m = Math.floor(dist()); } catch (e) {}
+  track('game_quit', p, { send_instantly: true, transport: 'sendBeacon' });
+}
+function startGame(lvl) {
+  quitSent = false;
+""")
+sub("  if (document.hidden) { if (mode === 'play' && !paused) togglePause();", "  if (document.hidden) { trackQuit('app_hidden'); if (mode === 'play' && !paused) togglePause();")
+sub("$('btnQuit').addEventListener('click', () => { paused = false;", "$('btnQuit').addEventListener('click', () => { trackQuit('quit_button'); paused = false;")
 sub("zoom.x = 1; zoom.v = 0; slowmo = 0; mode = 'play'; paused = false; show(null); setMusic(false, true); setMusic(true);\n}",
     "zoom.x = 1; zoom.v = 0; slowmo = 0; mode = 'play'; paused = false; show(null); setMusic(false, true); setMusic(true);\n  track('game_start', { level: pubLevel(lvl), muted, touch: 'ontouchstart' in window });\n}")
 # level 1 and 3 win / game over
