@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>SK8 — a tiny skateboarding game</title>
+<title>SK8: Hell Yeah — a tiny skateboarding game</title>
 <meta name="description" content="Kick, ollie, flip and grind through three levels: the street, downtown, and hell. Free to play in your browser, made for phones.">
-<meta property="og:title" content="SK8 — a tiny skateboarding game">
+<meta property="og:title" content="SK8: Hell Yeah — a tiny skateboarding game">
 <meta property="og:description" content="Kick, ollie, flip and grind through three levels. Free, plays in your browser.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://sk8.oatmealmorning.com/">
 <meta property="og:image" content="https://sk8.oatmealmorning.com/preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.png">
-<link rel="apple-touch-icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SK8">
@@ -228,6 +228,11 @@ h1 span { color: var(--pink); }
 #btnWinAgain { background: #b9b2ff; }
 #btnNext:not(.ghost) { background: var(--mint); }
 #pause .card { align-items: center; }
+/* pause: RESUME across the top, three equal buttons under it */
+#pause .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: min(460px, 84vw); box-sizing: border-box; padding: 3px 4px 8px; }
+#pause .row .cta { align-self: stretch; justify-self: stretch; margin: 0; text-align: center; white-space: nowrap; font-size: 16px; padding: 11px 10px; }
+#pause .row #btnResume { grid-column: 1 / -1; font-size: 22px; padding: 12px 10px; }
+#app.rot #pause .row { width: min(460px, 84vh); }  /* held upright: the stage is turned, so its width is the screen height */
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 .snd { font-size: 14px; padding: 10px 16px; }
 .ghost { background: transparent; color: var(--paper); border-color: var(--paper); box-shadow: none; font-size: 16px; }
@@ -237,6 +242,11 @@ h1 span { color: var(--pink); }
   background: radial-gradient(circle at 20% 15%, rgba(255,111,168,0.22), transparent 42%), radial-gradient(circle at 80% 85%, rgba(127,240,207,0.18), transparent 45%), var(--night);
   padding: 24px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)); }
 .sk { position: relative; width: min(46vw, 190px); height: min(72vh, 560px); animation: turn 2.6s cubic-bezier(.6,-0.3,.3,1.3) infinite; }
+/* phone already sideways (Android start card): same board proportions, laid flat and sized by width, so it isn't squashed */
+#rotate.land .sk { position: absolute; left: 50%; top: 42%; height: min(46vw, 110vh, 420px); width: auto; aspect-ratio: 19 / 56; transform: translate(-50%, -50%) rotate(-90deg); animation: turnflat 2.6s cubic-bezier(.6,-0.3,.3,1.3) infinite; }
+/* the board stands up small, then turns sideways and grows: the same "turn your phone" motion as the upright card */
+@keyframes turnflat { 0%, 18% { transform: translate(-50%, -50%) rotate(0deg) scale(0.62); } 46%, 72% { transform: translate(-50%, -50%) rotate(-90deg) scale(1); } 100% { transform: translate(-50%, -50%) rotate(0deg) scale(0.62); } }
+#rotate.land .sk .logo { font-size: clamp(40px, 7vw, 84px); }
 @keyframes turn { 0%, 18% { transform: rotate(0deg) scale(1); } 46%, 72% { transform: rotate(-90deg) scale(0.66); } 100% { transform: rotate(0deg) scale(1); } }
 .sk .deck2 { position: absolute; inset: 0; border-radius: 95px / 80px; border: 6px solid var(--ink); overflow: hidden;
   background: linear-gradient(90deg, transparent 0 18%, rgba(255,255,255,0.12) 18% 22%, transparent 22%), #7a3cff;
@@ -255,7 +265,7 @@ h1 span { color: var(--pink); }
 @keyframes blink { 50% { opacity: 0.35; } }
 @media (max-height: 430px) { h1 { font-size: 46px; } #over h1 { font-size: 46px; } .how { font-size: 11.5px; line-height: 1.3; padding: 7px 11px; gap: 3px 10px; } .install { font-size: 11px; padding: 6px 10px; } }
 @media (max-height: 380px) { .how { font-size: 11px; padding: 6px 10px; } .cta { font-size: 18px; padding: 9px 22px; } .card { gap: 8px; } .btn { width: 80px; height: 80px; } #btnFlip { width: 92px; height: 92px; } #joy { width: 170px; height: 84px; } #knob { width: 66px; height: 66px; } }
-@media (prefers-reduced-motion: reduce) { #win .hero, #title .dude, .sk, .cap span { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #win .hero, #title .dude, .sk, #rotate.land .sk, .cap span { animation: none; } }
 
 /* web build additions: level select, links, credits */
 .lvls { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -294,7 +304,7 @@ h1 span { color: var(--pink); }
         <b>ENEMIES</b><span>Jump on their heads or over them.</span>
         <b>GOAL</b><span>Reach the 🤟 hand.</span>
       </div>
-      <div class="row lvls"><button class="cta" id="btnStart" type="button">1 STREET<small id="lb1">START HERE</small></button><button class="cta" id="btnL2" type="button">2 DOWNTOWN<small id="lb2"></small></button><button class="cta" id="btnL3" type="button">3 HELL<small id="lb3"></small></button></div><button class="cta" id="btnLevel2" type="button" hidden>LEVEL 2</button><button class="cta ghost snd" id="btnSound" type="button">SOUND ON</button><div class="links"><a id="fbLink" href="https://docs.google.com/forms/d/1rqOcjfHyTOeX9mM_i9ZZ_TgRlVdkYwGYjRxxUn7pfC8/viewform" target="_blank" rel="noopener">FEEDBACK</a><button id="btnCredits" type="button">CREDITS</button></div>
+      <div class="row lvls"><button class="cta" id="btnStart" type="button">1 STREET<small id="lb1">START HERE</small></button><button class="cta" id="btnL2" type="button">2 DOWNTOWN<small id="lb2"></small></button><button class="cta" id="btnL3" type="button">3 HELL<small id="lb3"></small></button></div><button class="cta" id="btnLevel2" type="button" hidden>LEVEL 2</button><button class="cta ghost snd" id="btnSound" type="button">SOUND ON</button><div class="links"><a id="fbLink" href="https://docs.google.com/forms/d/1rqOcjfHyTOeX9mM_i9ZZ_TgRlVdkYwGYjRxxUn7pfC8/viewform" target="_blank" rel="noopener">FEEDBACK</a><button id="btnShareTitle" type="button">SHARE</button><button id="btnCredits" type="button">CREDITS</button></div>
       <div class="sub" id="tBest"></div>
     </div>
   </section>
@@ -391,7 +401,7 @@ h1 span { color: var(--pink); }
   <section class="ov" id="pause" hidden>
     <div class="card">
       <h1>Pause</h1>
-      <div class="row"><button class="cta" id="btnResume">RESUME</button><button class="cta ghost snd" id="btnSound2" type="button">SOUND ON</button><button class="cta ghost" id="btnQuit">MENU</button></div>
+      <div class="row"><button class="cta" id="btnResume">RESUME</button><button class="cta ghost" id="btnSharePause" type="button">SHARE</button><button class="cta ghost snd" id="btnSound2" type="button">SOUND ON</button><button class="cta ghost" id="btnQuit">MENU</button></div>
     </div>
   </section>
 </div>
@@ -410,8 +420,11 @@ const PH_KEY = 'phc_qo4wiAUHZxUNwLi2nGGmHVEUX4cZxUcMNEMy5vxG6jBW';
 window.track = function(){};
 if (PH_KEY) {
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group identify setPersonProperties alias".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-  posthog.init(PH_KEY, { api_host: 'https://us.i.posthog.com', persistence: 'memory', capture_pageview: true, autocapture: false, disable_session_recording: true }); posthog.register({ app: 'sk8', build: '3-levels' });try{if(location.search.indexOf('tester=1')>-1)localStorage.setItem('om-tester','1');if(localStorage.getItem('om-tester')==='1')posthog.register({is_internal:true})}catch(e){};
-  window.track = (ev, props) => { try { posthog.capture(ev, props); } catch (e) {} };
+  const SK8_BUILD = { platform: 'web', version: '' };   // app builds: tools/make_app_build.py rewrites this one line
+  let sk8Pid = null;   // app builds only: a random ID kept on the phone, so a returning player counts as the same player. The web game keeps no ID.
+  if (SK8_BUILD.platform !== 'web') { try { sk8Pid = localStorage.getItem('sk8-pid'); if (!sk8Pid) { sk8Pid = 'sk8-' + Array.from(crypto.getRandomValues(new Uint8Array(16)), x => ('0' + x.toString(16)).slice(-2)).join(''); localStorage.setItem('sk8-pid', sk8Pid); } } catch (e) { sk8Pid = null; } }
+  posthog.init(PH_KEY, Object.assign({ api_host: 'https://us.i.posthog.com', persistence: 'memory', capture_pageview: true, autocapture: false, disable_session_recording: true }, sk8Pid ? { bootstrap: { distinctID: sk8Pid } } : {})); posthog.register(Object.assign({ app: 'sk8', build: '3-levels', platform: SK8_BUILD.platform }, SK8_BUILD.version ? { app_version: SK8_BUILD.version } : {}));try{if(location.search.indexOf('tester=1')>-1)localStorage.setItem('om-tester','1');if(localStorage.getItem('om-tester')==='1')posthog.register({is_internal:true})}catch(e){};
+  window.track = (ev, props, opts) => { try { posthog.capture(ev, props, opts); } catch (e) {} };
 }
 </script>
 <script>
@@ -457,8 +470,11 @@ function layout() {
   cv.width = Math.round(appW * dpr); cv.height = Math.round(appH * dpr);
   cv.style.width = appW + 'px'; cv.style.height = appH + 'px';
   scale = appH / VH; VW = appW / scale;
-  if (!portrait) splash = false;
-  document.getElementById('rotate').hidden = !(portrait && splash);
+  if (!portrait && !window.SK8Native) splash = false;     // web: no splash once sideways. Android app: always show the start card once (tap to ride starts the sound)
+  const rt = document.getElementById('rotate');
+  rt.querySelector('.cap b').textContent = portrait ? 'TURN YOUR PHONE' : 'SK8: HELL YEAH';
+  rt.classList.toggle('land', !portrait);
+  rt.hidden = !splash;
 }
 window.addEventListener('resize', layout);
 window.addEventListener('orientationchange', () => setTimeout(layout, 120));
@@ -3066,7 +3082,15 @@ function fitCards() {
 }
 window.addEventListener('resize', () => setTimeout(fitCards, 60));
 const pubLevel = l => l === 4 ? 2 : l === 3 ? 3 : l === 2 ? 'vert' : 1;
+let quitSent = false;   // one game_quit per run at most
+function trackQuit(reason) {   // player left a run before winning or losing: quit button, or app put away / phone locked mid-run
+  if (mode !== 'play' || quitSent) return; quitSent = true;
+  const p = { level: pubLevel(level), reason, seconds: Math.round(tPlay), score, lives };
+  try { if (level === 4 && D4) { p.manholes = D4.holes; p.stair_sets = D4.sets; } else if (level !== 2) p.distance_m = Math.floor(dist()); } catch (e) {}
+  track('game_quit', p, { send_instantly: true, transport: 'sendBeacon' });
+}
 function startGame(lvl) {
+  quitSent = false;
   if (WIN.src) { try { WIN.src.stop(); } catch (e) {} WIN.src = null; }
   initAudio();
   try { if (document.documentElement.requestFullscreen && 'ontouchstart' in window && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
@@ -3172,10 +3196,10 @@ $('wHero').src = ASSET_SRC.win;
 $('btnPause').addEventListener('click', togglePause);
 $('btnResume').addEventListener('click', togglePause);
 document.addEventListener('visibilitychange', () => {      // phone locked or app switched: pause and go quiet
-  if (document.hidden) { if (mode === 'play' && !paused) togglePause(); if (AC && AC.state === 'running') AC.suspend(); }
+  if (document.hidden) { trackQuit('app_hidden'); if (mode === 'play' && !paused) togglePause(); if (AC && AC.state === 'running') AC.suspend(); }
   else if (AC && AC.state === 'suspended') AC.resume();
 });
-$('btnQuit').addEventListener('click', () => { paused = false; mode = 'title'; newGame(); quietLoops(); show('title'); setMusic(false, true); });
+$('btnQuit').addEventListener('click', () => { trackQuit('quit_button'); paused = false; mode = 'title'; newGame(); quietLoops(); show('title'); setMusic(false, true); });
 const sndBtns = [$('btnSound'), $('btnSound2')];
 const paintSnd = () => sndBtns.forEach(b => { b.textContent = muted ? 'SOUND ON' : 'SOUND OFF'; b.setAttribute('aria-label', muted ? 'Turn sound on' : 'Turn sound off'); });
 sndBtns.forEach(b => b.addEventListener('click', () => { initAudio(); setMuted(!muted); paintSnd(); })); paintSnd();
@@ -3207,20 +3231,26 @@ $('btnCredits').addEventListener('click', () => { show('credits'); track('credit
 $('btnCreditsBack').addEventListener('click', () => show('title'));
 $('fbLink').addEventListener('click', () => track('feedback_click', {}));
 async function shareScore(where) {
-  const won = where === 'win', n = pubLevel(level), pts = score.toLocaleString('en-US');
-  const text = won ? (n === 3 ? `I escaped hell in SK8 with ${pts} points. Beat me:` : `I shredded Level ${n} of SK8 with ${pts} points. Beat me:`)
-                   : `I got ${pts} points on Level ${n} of SK8. Beat me:`;
   const url = 'https://sk8.oatmealmorning.com/';
-  const btn = $(won ? 'btnShareWin' : 'btnShareOver');
+  const n = pubLevel(level), pts = score.toLocaleString('en-US');
+  let text;
+  if (where === 'win') text = n === 3 ? `I escaped hell in SK8: Hell Yeah with ${pts} points. Beat me:` : `I shredded Level ${n} of SK8: Hell Yeah with ${pts} points. Beat me:`;
+  else if (where === 'over') text = `I got ${pts} points on Level ${n} of SK8: Hell Yeah. Beat me:`;
+  else if (where === 'pause') text = `I'm riding Level ${n} of SK8: Hell Yeah. Come beat me:`;
+  else text = 'SK8: Hell Yeah is a tiny skateboarding game. Kick, flip, grind:';
+  const btn = $({ win: 'btnShareWin', over: 'btnShareOver', pause: 'btnSharePause', title: 'btnShareTitle' }[where]);
   track('share_click', { where, level: n, score });
   try {
-    if (navigator.share) { await navigator.share({ title: 'SK8', text, url }); return; }
+    if (window.SK8Native && SK8Native.share) { SK8Native.share(text + ' ' + url); return; }   // Android app: opens the system share sheet directly
+    if (navigator.share) { await navigator.share({ title: 'SK8: Hell Yeah', text, url }); return; }
     await navigator.clipboard.writeText(text + ' ' + url);
     const old = btn.textContent; btn.textContent = 'LINK COPIED'; setTimeout(() => { btn.textContent = old; }, 1600);
   } catch (e) {}
 }
 $('btnShareWin').addEventListener('click', () => shareScore('win'));
 $('btnShareOver').addEventListener('click', () => shareScore('over'));
+$('btnSharePause').addEventListener('click', () => shareScore('pause'));
+$('btnShareTitle').addEventListener('click', () => shareScore('title'));
 paintLevels();
 
 Promise.all([ready, document.fonts ? document.fonts.load('400 40px "Rubik Wet Paint"').catch(() => {}) : 0]).then(() => {

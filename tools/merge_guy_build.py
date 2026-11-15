@@ -50,16 +50,16 @@ blob = "const bin = atob(CUT_SRC.slice(CUT_SRC.indexOf(',') + 1)), u8 = new Uint
 sub(blob, 'cutURL = new URL(CUT_SRC, location.href).href;', count=2)
 
 # ---------- 2. page head ----------
-sub('<title>SK8</title>', '''<title>SK8 — a tiny skateboarding game</title>
+sub('<title>SK8</title>', '''<title>SK8: Hell Yeah — a tiny skateboarding game</title>
 <meta name="description" content="Kick, ollie, flip and grind through three levels: the street, downtown, and hell. Free to play in your browser, made for phones.">
-<meta property="og:title" content="SK8 — a tiny skateboarding game">
+<meta property="og:title" content="SK8: Hell Yeah — a tiny skateboarding game">
 <meta property="og:description" content="Kick, ollie, flip and grind through three levels. Free, plays in your browser.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://sk8.oatmealmorning.com/">
 <meta property="og:image" content="https://sk8.oatmealmorning.com/preview.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.png">
-<link rel="apple-touch-icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SK8">''')
@@ -117,8 +117,11 @@ const PH_KEY = '%s';
 window.track = function(){};
 if (PH_KEY) {
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group identify setPersonProperties alias".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-  posthog.init(PH_KEY, { api_host: 'https://us.i.posthog.com', persistence: 'memory', capture_pageview: true, autocapture: false, disable_session_recording: true }); posthog.register({ app: 'sk8', build: '3-levels' });try{if(location.search.indexOf('tester=1')>-1)localStorage.setItem('om-tester','1');if(localStorage.getItem('om-tester')==='1')posthog.register({is_internal:true})}catch(e){};
-  window.track = (ev, props) => { try { posthog.capture(ev, props); } catch (e) {} };
+  const SK8_BUILD = { platform: 'web', version: '' };   // app builds: tools/make_app_build.py rewrites this one line
+  let sk8Pid = null;   // app builds only: a random ID kept on the phone, so a returning player counts as the same player. The web game keeps no ID.
+  if (SK8_BUILD.platform !== 'web') { try { sk8Pid = localStorage.getItem('sk8-pid'); if (!sk8Pid) { sk8Pid = 'sk8-' + Array.from(crypto.getRandomValues(new Uint8Array(16)), x => ('0' + x.toString(16)).slice(-2)).join(''); localStorage.setItem('sk8-pid', sk8Pid); } } catch (e) { sk8Pid = null; } }
+  posthog.init(PH_KEY, Object.assign({ api_host: 'https://us.i.posthog.com', persistence: 'memory', capture_pageview: true, autocapture: false, disable_session_recording: true }, sk8Pid ? { bootstrap: { distinctID: sk8Pid } } : {})); posthog.register(Object.assign({ app: 'sk8', build: '3-levels', platform: SK8_BUILD.platform }, SK8_BUILD.version ? { app_version: SK8_BUILD.version } : {}));try{if(location.search.indexOf('tester=1')>-1)localStorage.setItem('om-tester','1');if(localStorage.getItem('om-tester')==='1')posthog.register({is_internal:true})}catch(e){};
+  window.track = (ev, props, opts) => { try { posthog.capture(ev, props, opts); } catch (e) {} };
 }
 </script>
 <script>
@@ -126,6 +129,19 @@ const ASSET_SRC=''' % PH_KEY)
 
 # internal level numbers: 1 street, 4 downtown (shown as level 2), 3 hell, 2 = archived vert level
 sub("function startGame(lvl) {", "const pubLevel = l => l === 4 ? 2 : l === 3 ? 3 : l === 2 ? 'vert' : 1;\nfunction startGame(lvl) {")
+# game_quit: a run left before winning or losing (quit button, or app put away mid-run)
+sub("function startGame(lvl) {\n", """let quitSent = false;   // one game_quit per run at most
+function trackQuit(reason) {   // player left a run before winning or losing: quit button, or app put away / phone locked mid-run
+  if (mode !== 'play' || quitSent) return; quitSent = true;
+  const p = { level: pubLevel(level), reason, seconds: Math.round(tPlay), score, lives };
+  try { if (level === 4 && D4) { p.manholes = D4.holes; p.stair_sets = D4.sets; } else if (level !== 2) p.distance_m = Math.floor(dist()); } catch (e) {}
+  track('game_quit', p, { send_instantly: true, transport: 'sendBeacon' });
+}
+function startGame(lvl) {
+  quitSent = false;
+""")
+sub("  if (document.hidden) { if (mode === 'play' && !paused) togglePause();", "  if (document.hidden) { trackQuit('app_hidden'); if (mode === 'play' && !paused) togglePause();")
+sub("$('btnQuit').addEventListener('click', () => { paused = false;", "$('btnQuit').addEventListener('click', () => { trackQuit('quit_button'); paused = false;")
 sub("zoom.x = 1; zoom.v = 0; slowmo = 0; mode = 'play'; paused = false; show(null); setMusic(false, true); setMusic(true);\n}",
     "zoom.x = 1; zoom.v = 0; slowmo = 0; mode = 'play'; paused = false; show(null); setMusic(false, true); setMusic(true);\n  track('game_start', { level: pubLevel(lvl), muted, touch: 'ontouchstart' in window });\n}")
 # level 1 and 3 win / game over
