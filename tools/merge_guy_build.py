@@ -12,7 +12,7 @@ What it adds on top of Guy's game:
   - LOADING... screen while the 12 MB of art loads
   - PostHog analytics (cookieless) with the level on every event
   - title screen: level select (1 STREET / 2 DOWNTOWN / 3 HELL, locked until earned,
-    best score under each), FEEDBACK link, CREDITS card
+    best score under each), FEEDBACK link, CREDITS card (with Privacy and Help links: Apple needs Privacy reachable in-app)
   - SHARE on win and game-over cards, MENU on the game-over card
   - the cutscene video moved to its own file (cut.mp4), loaded only near level 3
   - debug hook window.__sk8 removed
@@ -99,9 +99,10 @@ sub('<section class="ov" id="pause" hidden>', '''<section class="ov" id="credits
       <h1>SK<span>8</span></h1>
       <div class="how">
         <b>GAME + ART</b><span>Guy</span>
-        <b>PUBLISHED BY</b><span>Oatmeal Morning</span>
+        <b>PUBLISHED BY</b><span><a href="https://oatmealmorning.com/" target="_blank" rel="noopener">Oatmeal Morning</a></span>
         <b>FONTS</b><span>Rubik, Rubik Wet Paint (SIL Open Font License)</span>
-        <b>HELP</b><span>sk8.oatmealmorning.com/support</span>
+        <b>PRIVACY</b><span><a href="https://sk8.oatmealmorning.com/privacy/" target="_blank" rel="noopener">sk8.oatmealmorning.com/privacy</a></span>
+        <b>HELP</b><span><a href="https://sk8.oatmealmorning.com/support/" target="_blank" rel="noopener">sk8.oatmealmorning.com/support</a></span>
       </div>
       <div class="row"><button class="cta ghost" id="btnCreditsBack" type="button">BACK</button></div>
     </div>
