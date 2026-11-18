@@ -12,6 +12,13 @@ import hashlib, os, re, sys
 
 WEB_LINE = "const SK8_BUILD = { platform: 'web', version: '' };"
 
+# iOS only: the game shows its start card and uses the system share sheet when window.SK8Native exists
+# (the Android wrapper injects it natively). In the Capacitor iOS app we define it here: share goes through
+# the Capacitor bridge to the Share plugin, with the Web Share API as a fallback. Must run before the game script.
+IOS_SHIM = (" window.SK8Native = { share: function (s) { try { if (window.Capacitor && Capacitor.nativePromise) "
+            "{ Capacitor.nativePromise('Share', 'share', { text: s }).catch(function () {}); } "
+            "else if (navigator.share) { navigator.share({ text: s }).catch(function () {}); } } catch (e) {} } };")
+
 def main():
     if len(sys.argv) != 4 or sys.argv[1] not in ('android', 'ios') or not re.fullmatch(r'\d+\.\d+(\.\d+)?', sys.argv[2]):
         sys.exit(__doc__)
@@ -22,6 +29,8 @@ def main():
     if data.count(old) != 1:
         sys.exit('STOP: expected exactly one SK8_BUILD line in index.html, found %d' % data.count(old))
     new = ("const SK8_BUILD = { platform: '%s', version: '%s' };" % (platform, version)).encode()
+    if platform == 'ios':
+        new += IOS_SHIM.encode()
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     open(out, 'wb').write(data.replace(old, new))
     print('Wrote %s  (%s %s, %d bytes, md5 %s)' % (out, platform, version, len(data) - len(old) + len(new), hashlib.md5(data.replace(old, new)).hexdigest()))
