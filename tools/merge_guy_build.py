@@ -20,6 +20,8 @@ What it adds on top of Guy's game:
     remembered on the device, the title screen shows tries left, and after running out
     level 2 shows "BEAT STREET AGAIN" and can't be entered until level 1 is beaten again
     (decided by Noa 1 Nov; without this the rule looked like a bug next to the level select)
+  - menu music: after the first tap the song plays on the title screen and carries on into the level
+    (decided by Noa 18 Nov)
 """
 import base64, re, sys, pathlib
 
@@ -229,6 +231,17 @@ $('btnShareOver').addEventListener('click', () => shareScore('over'));
 paintLevels();""")
 # show is declared with `function show`, so it can be reassigned above; remove the loading screen once art is ready
 sub("  requestAnimationFrame(frame);\n});\n})();", "  const ld = document.getElementById('loading'); if (ld) ld.remove();\n  requestAnimationFrame(frame);\n});\n})();")
+
+# Menu music (Noa, 18 Nov 2026): music plays on the title screen after the first tap (so SOUND ON/OFF can be
+# tried before riding) and carries on into the level instead of restarting at START.
+MENU_JS = """// Menu music (Noa, 18 Nov 2026): after the first tap the song also plays on the title screen, so SOUND ON/OFF
+// can be tried before riding, and it carries on into the level instead of restarting. Browsers and iOS only
+// allow sound after a tap, so this runs on every tap while the menu is showing (after the button's own handler).
+function menuMusic() { if (mode !== 'title' || splash) return; initAudio(); if (!MUSIC.on) setMusic(true); }
+['pointerup', 'touchend', 'click'].forEach(ev => document.addEventListener(ev, menuMusic));
+"""
+sub("show(null); setMusic(false, true); setMusic(true);", "show(null); if (!MUSIC.on) { setMusic(false, true); setMusic(true); }")
+sub("document.addEventListener('visibilitychange'", MENU_JS + "document.addEventListener('visibilitychange'")
 
 (out_dir / 'index.html').write_text(s, encoding='utf-8')
 print('ok:', out_dir / 'index.html', round(len(s.encode()) / 1e6, 2), 'MB;', out_dir / 'cut.mp4', round((out_dir / 'cut.mp4').stat().st_size / 1e6, 2), 'MB')

@@ -3099,7 +3099,7 @@ function startGame(lvl) {
   if (lvl === 2) newVert(); else newGame(lvl);
   $('btnJump').innerHTML = lvl === 2 ? '<span>JUMP<small>SWIPE ✦</small></span>' : '<span>JUMP<small>OLLIE</small></span>';
   app.classList.toggle('lv2', lvl === 2); app.classList.toggle('lv3', lvl === 3); input.duck = 0; input.joy = 0; input.joyY = 0; knob.style.transform = 'translate(0px,0px)';
-  $('btnFlip').innerHTML = lvl === 2 ? '<span>FLIP<small>TAP ×1 ×2 ×3 ×4</small></span>' : '<span>FLIP<small>TAP ×1 ×2 ×3</small></span>'; zoom.x = 1; zoom.v = 0; slowmo = 0; mode = 'play'; paused = false; show(null); setMusic(false, true); setMusic(true);
+  $('btnFlip').innerHTML = lvl === 2 ? '<span>FLIP<small>TAP ×1 ×2 ×3 ×4</small></span>' : '<span>FLIP<small>TAP ×1 ×2 ×3</small></span>'; zoom.x = 1; zoom.v = 0; slowmo = 0; mode = 'play'; paused = false; show(null); if (!MUSIC.on) { setMusic(false, true); setMusic(true); }
   track('game_start', { level: pubLevel(lvl), muted, touch: 'ontouchstart' in window });
 }
 function togglePause() {
@@ -3196,6 +3196,11 @@ $('btnBack2').addEventListener('click', () => { level = 1; newGame(); mode = 'ti
 $('wHero').src = ASSET_SRC.win;
 $('btnPause').addEventListener('click', togglePause);
 $('btnResume').addEventListener('click', togglePause);
+// Menu music (Noa, 18 Nov 2026): after the first tap the song also plays on the title screen, so SOUND ON/OFF
+// can be tried before riding, and it carries on into the level instead of restarting. Browsers and iOS only
+// allow sound after a tap, so this runs on every tap while the menu is showing (after the button's own handler).
+function menuMusic() { if (mode !== 'title' || splash) return; initAudio(); if (!MUSIC.on) setMusic(true); }
+['pointerup', 'touchend', 'click'].forEach(ev => document.addEventListener(ev, menuMusic));
 document.addEventListener('visibilitychange', () => {      // phone locked or app switched: pause and go quiet
   if (document.hidden) { trackQuit('app_hidden'); if (mode === 'play' && !paused) togglePause(); if (AC && AC.state === 'running') AC.suspend(); }
   else if (AC && AC.state === 'suspended') AC.resume();
