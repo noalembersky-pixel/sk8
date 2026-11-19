@@ -22,27 +22,23 @@
   .page{max-width:600px;min-height:100svh;display:flex;flex-direction:column;padding-top:16px}
   .page>main{flex:1}
   .land{text-align:center;margin:8px 0 0}
-  .land img{width:min(58vw,250px);height:auto;aspect-ratio:513/620;object-fit:contain;display:block;margin:0 auto 4px;filter:drop-shadow(0 18px 28px rgba(0,0,0,.45))}
+  .land .art{width:min(58vw,250px);height:auto;aspect-ratio:513/620;object-fit:contain;display:block;margin:0 auto 4px;filter:drop-shadow(0 18px 28px rgba(0,0,0,.45))}
   .land h1{font-size:clamp(34px,9vw,46px);letter-spacing:.02em;line-height:1.05}
   .land h1 .hy{color:var(--pink)}
   .land .tag{margin:12px auto 0;max-width:34ch;color:var(--paper);font-size:19px;line-height:1.4}
   .land .tag b{color:var(--mint);font-weight:800}
-  .stores{display:flex;flex-direction:column;gap:12px;align-items:center;margin:26px auto 0;max-width:340px}
-  .store{display:flex;align-items:center;gap:14px;width:100%;background:var(--paper);color:var(--ink);border-radius:14px;padding:12px 18px;text-align:left;line-height:1.15;box-shadow:0 10px 24px rgba(0,0,0,.35)}
-  .store:hover{text-decoration:none;filter:brightness(1.03);transform:translateY(-1px)}
-  .store:focus-visible{outline:3px solid var(--sun)}
-  .store svg{width:30px;height:30px;flex:none;fill:none;stroke:var(--ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .store small{display:block;font-size:12px;font-weight:500;letter-spacing:.02em;color:#5a5466;text-transform:uppercase}
-  .store span{display:block;font-size:21px;font-weight:800}
-  .store.ios{background:var(--mint)}
-  .store.android{background:var(--sun)}
+  .stores{display:flex;flex-direction:column;gap:14px;align-items:center;margin:28px auto 0}
+  .store{display:block;line-height:0;border-radius:9px;transition:transform .12s ease}
+  .store img{height:60px;width:auto;display:block}
+  .store:hover{text-decoration:none;transform:translateY(-1px)}
+  .store:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
   .facts{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 10px;padding:0;margin:26px 0 0;color:var(--lav);font-size:14px}
   .facts li{background:var(--grip);border:1px solid #3a3550;border-radius:999px;padding:6px 13px}
   .studio{margin:28px 0 0;text-align:center;color:var(--lav);font-size:15px}
   .studio a{color:var(--paper)}
   @media (min-width:640px){
-    .stores{flex-direction:row;max-width:none;justify-content:center}
-    .store{width:auto;min-width:250px}
+    .stores{flex-direction:row;gap:18px;justify-content:center}
+    .store img{height:64px}
   }
   footer{justify-content:center}
 </style>
@@ -51,19 +47,13 @@
 <div class="page">
   <main>
     <section class="land">
-      <img src="/art-skater.png" alt="Hand-drawn skater mid-kickflip">
+      <img class="art" src="/art-skater.png" alt="Hand-drawn skater mid-kickflip">
       <h1>SK8: <span class="hy">Hell Yeah</span></h1>
       <p class="tag">Kick, flip, grind through <b>the street</b>, <b>downtown</b> and <b>hell</b>. A tiny, loud, hand-drawn skateboarding game for your phone.</p>
 
       <nav class="stores" id="stores" aria-label="Download">
-        <a class="store ios" id="storeIos" href="https://apps.apple.com/app/id6836286510" rel="noopener">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10 18.5h4"/></svg>
-          <div><small>Download on the</small><span>App Store</span></div>
-        </a>
-        <a class="store android" id="storeAndroid" href="https://play.google.com/store/apps/details?id=com.oatmealmorning.sk8" rel="noopener">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10 18.5h4"/></svg>
-          <div><small>Get it on</small><span>Google Play</span></div>
-        </a>
+        <a class="store" id="storeIos" href="https://apps.apple.com/app/id6836286510" rel="noopener"><img src="/badge-app-store.svg" alt="Download on the App Store" width="180" height="60"></a>
+        <a class="store" id="storeAndroid" href="https://play.google.com/store/apps/details?id=com.oatmealmorning.sk8" rel="noopener"><img src="/badge-google-play.png" alt="Get it on Google Play" width="202" height="60"></a>
       </nav>
 
       <ul class="facts">
