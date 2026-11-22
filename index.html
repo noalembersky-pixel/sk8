@@ -219,6 +219,11 @@ h1 span { color: var(--pink); }
 @media (max-height: 420px) { #win.scene .wincard h1.shred { font-size: 26px; } }
 .wincard { max-height: 94%; overflow: hidden; }
 @media (max-height: 420px) { .wincard { padding: 10px 16px; gap: 6px; } .wincard h1.shred { font-size: 34px; } .wincard .big { font-size: 34px; } .stats { gap: 2px 12px; } .stats strong { font-size: 14px; } .wincard .cta { font-size: 16px; padding: 8px 16px; } }
+@keyframes nbstomp { 0% { transform: scale(2.6) rotate(-7deg); opacity: 0; } 45% { transform: scale(0.88) rotate(2deg); opacity: 1; } 70% { transform: scale(1.1) rotate(-1deg); } 100% { transform: scale(1) rotate(0deg); } }
+@keyframes nbflash { 0%, 50%, 100% { color: var(--sun); text-shadow: none; } 25%, 75% { color: #ffffff; text-shadow: 0 0 14px var(--sun), 0 0 4px var(--pink); } }
+.sub.nb { display: inline-block; font: 900 22px var(--ui); color: var(--sun); letter-spacing: 0.08em; animation: nbstomp 0.55s cubic-bezier(.2,.9,.3,1.25) both, nbflash 0.5s 0.55s 2; }
+@media (prefers-reduced-motion: reduce) { .sub.nb { animation: none; } }
+.cta.shareScore { align-self: stretch; text-align: center; margin-top: 2px; }
 @keyframes cheer { 50% { transform: translateY(-14px) rotate(2deg); } }
 .wincard { align-items: center; text-align: center; background: rgba(30,26,38,0.85); border: 3px solid var(--ink); border-radius: 22px; padding: 16px 24px; box-shadow: 0 8px 0 rgba(0,0,0,0.4); }
 .wincard h1 { color: var(--mint); font-size: clamp(42px, 11vh, 76px); }
@@ -321,7 +326,7 @@ h1 span { color: var(--pink); }
         <div><span>COMBO</span><strong id="oCombo">0x</strong></div>
         <div><span>BEST TRICK</span><strong id="oTrick">-</strong></div>
       </div>
-      <div class="row"><button class="cta" id="btnAgain">RIDE AGAIN</button><button class="cta ghost" type="button" id="btnShareOver">SHARE</button><button class="cta ghost" type="button" id="btnMenuOver">MENU</button></div>
+      <div class="row"><button class="cta" id="btnAgain">RIDE AGAIN</button><button class="cta ghost" type="button" id="btnMenuOver">MENU</button></div><button class="cta ghost shareScore" type="button" id="btnShareOver">SHARE MY SCORE</button>
     </div>
   </section>
 
@@ -337,7 +342,7 @@ h1 span { color: var(--pink); }
         <div><span>HURDLES</span><strong id="wHurdles">0</strong></div>
         <div><span>BEST TRICK</span><strong id="wTrick">-</strong></div>
       </div>
-      <div class="row"><button class="cta" id="btnWinAgain">↻ RIDE AGAIN</button><button class="cta" id="btnNext" type="button">LEVEL 2 ▶</button><button class="cta ghost" type="button" id="btnShareWin">SHARE</button></div>
+      <div class="row"><button class="cta" id="btnWinAgain">↻ RIDE AGAIN</button><button class="cta" id="btnNext" type="button">LEVEL 2 ▶</button></div><button class="cta ghost shareScore" type="button" id="btnShareWin">SHARE MY SCORE</button>
     </div>
   </section>
 
@@ -484,6 +489,9 @@ layout();
 const BEST_KEY = 'sk8terboi-best';
 const getBest = () => { try { return +localStorage.getItem(BEST_KEY) || 0; } catch (e) { return 0; } };
 const setBest = v => { try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) {} };
+const SK8_SHARE_URL = 'https://sk8.oatmealmorning.com';   // the link in every share text: change this one line to the store link later
+const FOE_SHARE = { kid: 'Scooter Kid', guard: 'Mall Cop', karen: 'Karen', suit: 'Suit', red: 'Red Devil', blue: 'Blue Biter', fly: 'Hellbat' };
+let lastKiller = '', runInfo = { world: 0, score: 0, isNew: false, kind: '', killer: '' };   // what ended the run, and the result shown on the game-over / level-complete card
 
 /* ================= audio: skateboard + street sounds, punk loop ================= */
 let AC = null, master, sfxBus, musicBus, roll = null, grind = null, muted = false;
@@ -1060,7 +1068,7 @@ function stompFoe(f) {
   SFX.knock(); shake = 10; splat(f.x, GY - d.head + 20, 22);
 }
 function smoked(f) {
-  f.st = 'won'; f.t = 0;
+  f.st = 'won'; f.t = 0; lastKiller = f.type;
   if (FOE[f.type].sc) chomp(f); else punch(f);
 }
 /* ---------- level 3: monsters blow up, or eat you and spit out the board ---------- */
@@ -3004,8 +3012,9 @@ function showWin4() {
   l2Reset(); mode = 'win'; quietLoops(); winMusic && winMusic();
   const key = 'sk8-best-l2b', prev = (() => { try { return +localStorage.getItem(key) || 0; } catch (e) { return 0; } })(), best = Math.max(prev, score);
   try { localStorage.setItem(key, String(best)); localStorage.setItem('sk8-l3', '1'); } catch (e) {}
+  noteResult(2, prev, 'win');
   $('wTitle').innerHTML = 'LEVEL 2<br>CLEARED!';
-  track('level_win', { level: 2, score, seconds: Math.round(tPlay), manholes: D4.holes, stair_sets: D4.sets, best_trick: stats.best || '' });
+  track('level_win', { level: 2, world: 2, score, seconds: Math.round(tPlay), manholes: D4.holes, stair_sets: D4.sets, best_trick: stats.best || '' });
   $('wHero').src = ASSET_SRC.win4 || ASSET_SRC.win; $('wHero').classList.remove('scene'); $('win').classList.remove('scene');
   $('wScore').textContent = score.toLocaleString('en-US');
   $('wBest').textContent = score > prev && score > 0 ? 'NEW BEST!' : 'BEST ' + best.toLocaleString('en-US');
@@ -3022,9 +3031,13 @@ function showFail4() {
   $('btnAgain').dataset.lvl = out ? '1' : '4';
   $('oHead').textContent = out ? 'BACK TO THE STREET' : 'SO CLOSE!';
   $('oTitle').textContent = out ? 'OUT OF TRIES' : "TIME'S UP · " + (5 - l2Fails) + (5 - l2Fails === 1 ? ' TRY LEFT' : ' TRIES LEFT');
-  $('oScore').textContent = D4.holes + ' / ' + V4.TARGET; $('oBest').textContent = 'MANHOLES';
-  track('game_over', { level: 2, score, seconds: Math.round(tPlay), manholes: D4.holes, stair_sets: D4.sets, tries_used: l2Fails, best_trick: stats.best || '' });
-  setStat('oDist', 'POINTS', score.toLocaleString('en-US')); setStat('oKids', 'STAIR SETS', D4.sets);
+  const prev = bestOf('sk8-best-l2b'), best = Math.max(prev, score);
+  try { localStorage.setItem('sk8-best-l2b', String(best)); } catch (e) {}
+  noteResult(2, prev, 'over');
+  $('oScore').textContent = score.toLocaleString('en-US');
+  $('oBest').textContent = score > prev && score > 0 ? 'NEW BEST!' : 'BEST ' + best.toLocaleString('en-US');
+  track('game_over', { level: 2, world: 2, score, seconds: Math.round(tPlay), manholes: D4.holes, stair_sets: D4.sets, tries_used: l2Fails, best_trick: stats.best || '' });
+  setStat('oDist', 'MANHOLES', D4.holes + ' / ' + V4.TARGET); setStat('oKids', 'STAIR SETS', D4.sets);
   setStat('oCombo', 'COMBO', stats.maxCombo + 'x'); setStat('oTrick', 'BEST TRICK', stats.best || '-');
   show('over');
 }
@@ -3049,6 +3062,13 @@ function showFail2() {
   $('oTitle').textContent = out ? 'OUT OF TRIES' : "TIME'S UP · " + (5 - l2Fails) + (5 - l2Fails === 1 ? ' TRY LEFT' : ' TRIES LEFT');
   if (out) $('oHead').textContent = 'BACK TO THE STREET';
   show('over');
+}
+function noteResult(world, prev, kind) {
+  const isNew = score > prev && score > 0;
+  runInfo = { world, score, isNew, kind, killer: kind === 'over' ? lastKiller : '' };
+  if (isNew) track('new_best', { world, score, previous_best: prev });
+  const el = $(kind === 'over' ? 'oBest' : 'wBest'); el.classList.remove('nb');
+  if (isNew) { void el.offsetWidth; el.classList.add('nb'); if (kind === 'over') { try { SFX.bank(); } catch (e) {} } }   // power-chord stab (the win card has its own music)
 }
 function setStat(id, label, val) { const el = $(id); el.textContent = val; if (el.previousElementSibling) el.previousElementSibling.textContent = label; }
 
@@ -3086,12 +3106,12 @@ const pubLevel = l => l === 4 ? 2 : l === 3 ? 3 : l === 2 ? 'vert' : 1;
 let quitSent = false;   // one game_quit per run at most
 function trackQuit(reason) {   // player left a run before winning or losing: quit button, or app put away / phone locked mid-run
   if (mode !== 'play' || quitSent) return; quitSent = true;
-  const p = { level: pubLevel(level), reason, seconds: Math.round(tPlay), score, lives };
+  const p = { level: pubLevel(level), world: pubLevel(level), reason, seconds: Math.round(tPlay), score, lives };
   try { if (level === 4 && D4) { p.manholes = D4.holes; p.stair_sets = D4.sets; } else if (level !== 2) p.distance_m = Math.floor(dist()); } catch (e) {}
   track('game_quit', p, { send_instantly: true, transport: 'sendBeacon' });
 }
 function startGame(lvl) {
-  quitSent = false;
+  quitSent = false; lastKiller = ''; runInfo = { world: 0, score: 0, isNew: false, kind: '', killer: '' };
   if (WIN.src) { try { WIN.src.stop(); } catch (e) {} WIN.src = null; }
   initAudio();
   try { if (document.documentElement.requestFullscreen && 'ontouchstart' in window && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
@@ -3100,7 +3120,7 @@ function startGame(lvl) {
   $('btnJump').innerHTML = lvl === 2 ? '<span>JUMP<small>SWIPE ✦</small></span>' : '<span>JUMP<small>OLLIE</small></span>';
   app.classList.toggle('lv2', lvl === 2); app.classList.toggle('lv3', lvl === 3); input.duck = 0; input.joy = 0; input.joyY = 0; knob.style.transform = 'translate(0px,0px)';
   $('btnFlip').innerHTML = lvl === 2 ? '<span>FLIP<small>TAP ×1 ×2 ×3 ×4</small></span>' : '<span>FLIP<small>TAP ×1 ×2 ×3</small></span>'; zoom.x = 1; zoom.v = 0; slowmo = 0; mode = 'play'; paused = false; show(null); if (!MUSIC.on) { setMusic(false, true); setMusic(true); }
-  track('game_start', { level: pubLevel(lvl), muted, touch: 'ontouchstart' in window });
+  track('game_start', { level: pubLevel(lvl), world: pubLevel(lvl), muted, touch: 'ontouchstart' in window });
 }
 function togglePause() {
   if (mode !== 'play') return; paused = !paused; show(paused ? 'pause' : null);
@@ -3114,6 +3134,7 @@ function showWin() {
   const L3 = level === 3;
   const prev = L3 ? getBest3() : getBest(), best = Math.max(prev, score);
   if (L3) { try { localStorage.setItem(B3_KEY, String(best)); } catch (e) {} } else setBest(best);
+  noteResult(L3 ? 3 : 1, prev, 'win');
   $('wScore').textContent = score.toLocaleString('en-US');
   $('wBest').textContent = score > prev && score > 0 ? 'NEW BEST!' : 'BEST ' + best.toLocaleString('en-US');
   const sec = Math.round(tPlay); $('wTime').textContent = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
@@ -3125,7 +3146,7 @@ function showWin() {
   $('btnNext').textContent = 'LEVEL 2 ▶'; $('btnNext').disabled = false; $('btnNext').className = 'cta'; nextScreen = 'how4';   // level 2 is now Downtown (the vert level is archived)
   try { localStorage.setItem('sk8-l2', '1'); } catch (e) {}
   if (!L3) l2Reset();   // beating level 1 gives level 2 back, with fresh tries
-  track('level_win', { level: L3 ? 3 : 1, score, seconds: sec, stomps: stats.kids, best_trick: stats.best || '' });
+  track('level_win', { level: L3 ? 3 : 1, world: L3 ? 3 : 1, score, seconds: sec, stomps: stats.kids, best_trick: stats.best || '' });
   if (L3) { $('wTitle').innerHTML = 'HELL<br>ESCAPED!'; $('btnNext').textContent = 'MENU'; $('btnNext').className = 'cta ghost'; nextScreen = 'title'; $('wStomps').previousElementSibling.textContent = 'KABOOMS'; $('wHurdles').previousElementSibling.textContent = 'DODGES'; }
   show('win');
 }
@@ -3134,6 +3155,7 @@ function gameOver() {
   const L3 = level === 3;
   const prev = L3 ? getBest3() : getBest(), best = Math.max(prev, score);
   if (L3) { try { localStorage.setItem(B3_KEY, String(best)); } catch (e) {} } else setBest(best);
+  noteResult(L3 ? 3 : 1, prev, 'over');
   $('oScore').textContent = score.toLocaleString('en-US');
   $('oBest').textContent = score > prev && score > 0 ? 'NEW BEST!' : 'BEST ' + best.toLocaleString('en-US');
   $('oDist').textContent = Math.floor(dist()) + 'm';
@@ -3143,7 +3165,7 @@ function gameOver() {
   $('oCombo').textContent = stats.maxCombo + 'x';
   $('oTrick').textContent = stats.best || '-';
   $('oHead').textContent = L3 ? 'EATEN!' : 'SMOKED!';
-  track('game_over', { level: L3 ? 3 : 1, score, distance_m: Math.floor(dist()), seconds: Math.round(tPlay), stomps: stats.kids, best_trick: stats.best || '' });
+  track('game_over', { level: L3 ? 3 : 1, world: L3 ? 3 : 1, score, distance_m: Math.floor(dist()), seconds: Math.round(tPlay), stomps: stats.kids, best_trick: stats.best || '' });
   [['oDist', 'DISTANCE'], ['oKids', 'STOMPS'], ['oCombo', 'COMBO'], ['oTrick', 'BEST TRICK']].forEach(([i, l]) => { $(i).previousElementSibling.textContent = l; });
   show('over');
 }
@@ -3237,15 +3259,19 @@ $('btnCredits').addEventListener('click', () => { show('credits'); track('credit
 $('btnCreditsBack').addEventListener('click', () => show('title'));
 $('fbLink').addEventListener('click', () => track('feedback_click', {}));
 async function shareScore(where) {
-  const url = 'https://sk8.oatmealmorning.com/';
-  const n = pubLevel(level), pts = score.toLocaleString('en-US');
+  const url = SK8_SHARE_URL;
+  const n = pubLevel(level), end = where === 'over' || where === 'win';
+  const pts = (end ? runInfo.score : score).toLocaleString('en-US'), isNew = end && runInfo.isNew;
+  const WNAME = { 1: 'the Street', 2: 'Downtown', 3: 'Hell' };
   let text;
-  if (where === 'win') text = n === 3 ? `I escaped hell in SK8: Hell Yeah with ${pts} points. Beat me:` : `I shredded Level ${n} of SK8: Hell Yeah with ${pts} points. Beat me:`;
-  else if (where === 'over') text = `I got ${pts} points on Level ${n} of SK8: Hell Yeah. Beat me:`;
+  if (isNew) text = `I just hit ${pts} in SK8: Hell Yeah. Can you beat it?`;
+  else if (where === 'win') text = n === 3 ? `I escaped Hell in SK8: Hell Yeah with ${pts}. Can you beat it?` : `I shredded ${WNAME[n] || 'a level'} in SK8: Hell Yeah with ${pts}. Can you beat it?`;
+  else if (where === 'over') text = FOE_SHARE[runInfo.killer] ? `Got taken out by a ${FOE_SHARE[runInfo.killer]} at ${pts}. Can you beat it?`
+    : n === 2 ? `Ran out of time downtown at ${pts}. Can you beat it?` : `Got wiped out at ${pts}. Can you beat it?`;
   else if (where === 'pause') text = `I'm riding Level ${n} of SK8: Hell Yeah. Come beat me:`;
   else text = 'SK8: Hell Yeah is a tiny skateboarding game. Kick, flip, grind:';
   const btn = $({ win: 'btnShareWin', over: 'btnShareOver', pause: 'btnSharePause', title: 'btnShareTitle' }[where]);
-  track('share_click', { where, level: n, score });
+  track('share_click', { where, source: { over: 'game_over', win: 'level_complete' }[where] || where, level: n, world: n, score: end ? runInfo.score : score, is_new_best: !!isNew });
   try {
     if (window.SK8Native && SK8Native.share) { SK8Native.share(text + ' ' + url); return; }   // Android app: opens the system share sheet directly
     if (navigator.share) { await navigator.share({ title: 'SK8: Hell Yeah', text, url }); return; }
