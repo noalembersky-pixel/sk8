@@ -497,7 +497,7 @@ let lastKiller = '', runInfo = { world: 0, score: 0, isNew: false, kind: '', kil
 let AC = null, master, sfxBus, musicBus, roll = null, grind = null, muted = false;
 try { muted = localStorage.getItem('sk8-muted') === '1'; } catch (e) {}
 function initAudio() {
-  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  if (AC) { if (AC.state !== 'running') AC.resume(); return; }
   try {
     AC = new (window.AudioContext || window.webkitAudioContext)();
     const comp = AC.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(AC.destination);
@@ -3114,7 +3114,7 @@ function startGame(lvl) {
   quitSent = false; lastKiller = ''; runInfo = { world: 0, score: 0, isNew: false, kind: '', killer: '' };
   if (WIN.src) { try { WIN.src.stop(); } catch (e) {} WIN.src = null; }
   initAudio();
-  try { if (document.documentElement.requestFullscreen && 'ontouchstart' in window && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
+  try { if (!window.SK8Native && document.documentElement.requestFullscreen && 'ontouchstart' in window && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
   if (typeof lvl !== 'number') lvl = level;
   if (lvl === 2) newVert(); else newGame(lvl);
   $('btnJump').innerHTML = lvl === 2 ? '<span>JUMP<small>SWIPE ✦</small></span>' : '<span>JUMP<small>OLLIE</small></span>';
@@ -3225,7 +3225,7 @@ function menuMusic() { if (mode !== 'title' || splash) return; initAudio(); if (
 ['pointerup', 'touchend', 'click'].forEach(ev => document.addEventListener(ev, menuMusic));
 document.addEventListener('visibilitychange', () => {      // phone locked or app switched: pause and go quiet
   if (document.hidden) { trackQuit('app_hidden'); if (mode === 'play' && !paused) togglePause(); if (AC && AC.state === 'running') AC.suspend(); }
-  else if (AC && AC.state === 'suspended') AC.resume();
+  else if (AC && AC.state !== 'running') AC.resume();
 });
 $('btnQuit').addEventListener('click', () => { trackQuit('quit_button'); paused = false; mode = 'title'; newGame(); quietLoops(); show('title'); setMusic(false, true); });
 const sndBtns = [$('btnSound'), $('btnSound2')];

@@ -17,7 +17,8 @@ WEB_LINE = "const SK8_BUILD = { platform: 'web', version: '' };"
 # the Capacitor bridge to the Share plugin, with the Web Share API as a fallback. Must run before the game script.
 IOS_SHIM = (" window.SK8Native = { share: function (s) { try { if (window.Capacitor && Capacitor.nativePromise) "
             "{ Capacitor.nativePromise('Share', 'share', { text: s }).catch(function () {}); } "
-            "else if (navigator.share) { navigator.share({ text: s }).catch(function () {}); } } catch (e) {} } };")
+            "else if (navigator.share) { navigator.share({ text: s }).catch(function () {}); } } catch (e) {} } };"
+            " try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}")   # iPhone silent switch: WebKit audio session, iOS 16.4+ (build 1.6 (5) fix)
 
 def main():
     if len(sys.argv) != 4 or sys.argv[1] not in ('android', 'ios') or not re.fullmatch(r'\d+\.\d+(\.\d+)?', sys.argv[2]):
