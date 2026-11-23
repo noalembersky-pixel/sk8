@@ -489,7 +489,8 @@ layout();
 const BEST_KEY = 'sk8terboi-best';
 const getBest = () => { try { return +localStorage.getItem(BEST_KEY) || 0; } catch (e) { return 0; } };
 const setBest = v => { try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) {} };
-const SK8_SHARE_URL = 'https://sk8.oatmealmorning.com';   // the link in every share text: change this one line to the store link later
+const SK8_SHARE_URL = 'https://sk8.oatmealmorning.com';        // link in share texts from the WEB game (the playable site)
+const SK8_APP_SHARE_URL = 'https://sk8.oatmealmorning.com/get/'; // link in share texts from the APPS (Android/iOS): the store-links page
 const FOE_SHARE = { kid: 'Scooter Kid', guard: 'Mall Cop', karen: 'Karen', suit: 'Suit', red: 'Red Devil', blue: 'Blue Biter', fly: 'Hellbat' };
 let lastKiller = '', runInfo = { world: 0, score: 0, isNew: false, kind: '', killer: '' };   // what ended the run, and the result shown on the game-over / level-complete card
 
@@ -3259,7 +3260,7 @@ $('btnCredits').addEventListener('click', () => { show('credits'); track('credit
 $('btnCreditsBack').addEventListener('click', () => show('title'));
 $('fbLink').addEventListener('click', () => track('feedback_click', {}));
 async function shareScore(where) {
-  const url = SK8_SHARE_URL;
+  const url = window.SK8Native ? SK8_APP_SHARE_URL : SK8_SHARE_URL;   // SK8Native exists only inside the Android and iOS apps
   const n = pubLevel(level), end = where === 'over' || where === 'win';
   const pts = (end ? runInfo.score : score).toLocaleString('en-US'), isNew = end && runInfo.isNew;
   const WNAME = { 1: 'the Street', 2: 'Downtown', 3: 'Hell' };
