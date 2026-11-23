@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d1530">
+<title>Get SK8: Hell Yeah — a tiny skateboarding game</title>
+<meta name="description" content="Kick, ollie, flip and grind through three levels: the street, downtown, and hell. A free skateboarding game for iPhone and Android.">
+<meta property="og:title" content="SK8: Hell Yeah — a tiny skateboarding game">
+<meta property="og:description" content="Kick, flip, grind through the street, downtown and hell. Free on your phone.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sk8.oatmealmorning.com/get/">
+<meta property="og:image" content="https://sk8.oatmealmorning.com/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/site.css">
+<style>
+  /* Landing page only; everything else comes from /site.css (same look as /privacy/ and /support/). */
+  .page{max-width:600px;min-height:100svh;display:flex;flex-direction:column;padding-top:16px}
+  .page>main{flex:1}
+  .land{text-align:center;margin:8px 0 0}
+  .land .art{width:min(58vw,250px);height:auto;aspect-ratio:513/620;object-fit:contain;display:block;margin:0 auto 4px;filter:drop-shadow(0 18px 28px rgba(0,0,0,.45))}
+  .land h1{font-size:clamp(34px,9vw,46px);letter-spacing:.02em;line-height:1.05}
+  .land h1 .hy{color:var(--pink)}
+  .land .tag{margin:12px auto 0;max-width:34ch;color:var(--paper);font-size:19px;line-height:1.4}
+  .land .tag b{color:var(--mint);font-weight:800}
+  .stores{display:flex;flex-direction:column;gap:14px;align-items:center;margin:28px auto 0}
+  .store{display:block;line-height:0;border-radius:9px;transition:transform .12s ease}
+  .store img{height:60px;width:auto;display:block}
+  .store:hover{text-decoration:none;transform:translateY(-1px)}
+  .store:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+  .soon[hidden]{display:none}
+  .soon{display:inline-block;margin:28px auto 0;background:var(--grip);border:1px solid #3a3550;color:var(--sun);font-weight:800;font-size:16px;border-radius:999px;padding:10px 20px}
+  .facts{list-style:none;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 10px;padding:0;margin:26px 0 0;color:var(--lav);font-size:14px}
+  .facts li{background:var(--grip);border:1px solid #3a3550;border-radius:999px;padding:6px 13px}
+  .studio{margin:28px 0 0;text-align:center;color:var(--lav);font-size:15px}
+  .studio a{color:var(--paper)}
+  @media (min-width:640px){
+    .stores{flex-direction:row;gap:18px;justify-content:center}
+    .store img{height:64px}
+  }
+  footer{justify-content:center}
+</style>
+</head>
+<body>
+<div class="page">
+  <main>
+    <section class="land">
+      <img class="art" src="/art-skater.png" alt="Hand-drawn skater mid-kickflip">
+      <h1>SK8: <span class="hy">Hell Yeah</span></h1>
+      <p class="tag">Kick, flip, grind through <b>the street</b>, <b>downtown</b> and <b>hell</b>. A tiny, loud, hand-drawn skateboarding game for your phone.</p>
+
+      <nav class="stores" id="stores" aria-label="Download">
+        <a class="store" id="storeIos" href="https://apps.apple.com/app/id6836286510" rel="noopener"><img src="/badge-app-store.svg" alt="Download on the App Store" width="180" height="60"></a>
+        <a class="store" id="storeAndroid" href="https://play.google.com/store/apps/details?id=com.oatmealmorning.sk8" rel="noopener"><img src="/badge-google-play.png" alt="Get it on Google Play" width="202" height="60"></a>
+      </nav>
+      <p class="soon" id="soon" hidden>Coming soon to the App Store and Google Play</p>
+
+      <ul class="facts">
+        <li>Three levels</li>
+        <li>Free</li>
+        <li>No ads, no sign-up</li>
+        <li>Plays offline</li>
+      </ul>
+
+      <p class="studio">Made by <a href="https://oatmealmorning.com/">Oatmeal Morning</a>, a husband-and-wife studio.</p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="/support/">Help</a>
+    <a href="/privacy/">Privacy</a>
+    <a href="mailto:support@oatmealmorning.com">support@oatmealmorning.com</a>
+  </footer>
+</div>
+
+<script>
+/* LAUNCH-DAY SWITCHES: set a store to true the day its link goes live. A store set to false has no button.
+   While BOTH are false the page shows "Coming soon to the App Store and Google Play" instead (like ocd.oatmealmorning.com/get/). */
+const LIVE = { ios: false, android: false };
+
+(function () {
+  const ua = navigator.userAgent || '';
+  const isIos = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/.test(ua);
+  const nav = document.getElementById('stores'), ios = document.getElementById('storeIos'), android = document.getElementById('storeAndroid');
+  if (!LIVE.ios) ios.remove();
+  if (!LIVE.android) android.remove();
+  if (!LIVE.ios && !LIVE.android) { nav.remove(); document.getElementById('soon').hidden = false; }
+  if (isAndroid && LIVE.android) nav.prepend(android);      // Android phones: Google Play first
+  else if (isIos && LIVE.ios) nav.prepend(ios);             // iPhones: App Store first; computers keep both side by side
+  window.sk8Device = isIos ? 'ios' : isAndroid ? 'android' : 'other';
+})();
+</script>
+<script>
+/* ---- analytics (PostHog, cookieless, no autocapture, no recordings) — same project and key as the game ---- */
+const PH_KEY = 'phc_qo4wiAUHZxUNwLi2nGGmHVEUX4cZxUcMNEMy5vxG6jBW';
+window.track = function(){};
+if (PH_KEY) {
+  !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group identify setPersonProperties alias".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+  posthog.init(PH_KEY, { api_host: 'https://us.i.posthog.com', persistence: 'memory', capture_pageview: true, autocapture: false, disable_session_recording: true });
+  posthog.register({ app: 'sk8', page: 'get', platform: 'web', device: window.sk8Device });
+  window.track = (ev, props, opts) => { try { posthog.capture(ev, props, opts); } catch (e) {} };
+}
+document.querySelectorAll('.store').forEach(a => a.addEventListener('click', () => track('store_click', { store: a.id === 'storeIos' ? 'app_store' : 'google_play' }, { transport: 'sendBeacon' })));
+</script>
+</body>
+</html>
