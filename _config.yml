@@ -1,0 +1,8 @@
+# GitHub Pages settings for sk8.oatmealmorning.com
+# _game/ holds the playable game for the app builds. It must never be published:
+# GitHub Pages already skips folders that start with "_", and this list makes sure.
+# Never add a .nojekyll file to this repo (it would publish _game/).
+exclude:
+  - _game
+  - tools
+  - README.md

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Make the game file for an app build (Android or iOS) from index.html.
+"""Make the game file for an app build (Android or iOS) from _game/index.html.
+(The game is NOT on the website: _game/ is never published. See README.md.)
 
 Usage:  python3 tools/make_app_build.py android 1.5 OUT/index.html
 
@@ -24,11 +25,11 @@ def main():
     if len(sys.argv) != 4 or sys.argv[1] not in ('android', 'ios') or not re.fullmatch(r'\d+\.\d+(\.\d+)?', sys.argv[2]):
         sys.exit(__doc__)
     platform, version, out = sys.argv[1:]
-    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'index.html')
+    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '_game', 'index.html')
     data = open(src, 'rb').read()
     old = WEB_LINE.encode()
     if data.count(old) != 1:
-        sys.exit('STOP: expected exactly one SK8_BUILD line in index.html, found %d' % data.count(old))
+        sys.exit('STOP: expected exactly one SK8_BUILD line in _game/index.html, found %d' % data.count(old))
     new = ("const SK8_BUILD = { platform: '%s', version: '%s' };" % (platform, version)).encode()
     if platform == 'ios':
         new += IOS_SHIM.encode()

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Turn a game file from Guy (his Claude artifact, one big HTML) into the web build.
+"""Turn a game file from Guy (his Claude artifact, one big HTML) into the game file the app builds use (_game/).
 
-Usage:  python3 tools/merge_guy_build.py GUY_FILE.html OUT_DIR
+Usage:  python3 tools/merge_guy_build.py GUY_FILE.html _game
+
+Always use _game as OUT_DIR (never the repo root or any other folder: the website must not have the game).
 
 Writes OUT_DIR/index.html and OUT_DIR/cut.mp4. Every change below is a small,
 exact text replacement; if Guy's code changed so that one no longer matches,
